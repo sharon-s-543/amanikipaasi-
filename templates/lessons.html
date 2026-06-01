@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="lessons-container">
+    <button class="hamburger" onclick="toggleSidebar()">☰ Lessons Menu</button>
+
+    <div class="sidebar" id="lessonSidebar">
+        <h3>Lessons</h3>
+        <ul>
+            {% for lesson in lessons %}
+                <li><a href="{{ url_for('lessons', id=lesson.id) }}">{{ lesson.title }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="lesson-main">
+        {% if active_lesson %}
+            <h2>{{ active_lesson.title }}</h2>
+            <pre class="lesson-content">{{ active_lesson.content }}</pre>
+        {% else %}
+            <p>No lessons available yet. Check back soon!</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleSidebar() {
+    var sidebar = document.getElementById("lessonSidebar");
+    sidebar.classList.toggle("active");
+}
+</script>
+{% endblock %}
+
