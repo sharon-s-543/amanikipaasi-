@@ -8,7 +8,11 @@ body { font-family: Arial, sans-serif; margin: 0; background: #fdfdfd; color: #3
 .lessons-container { display: flex; flex-direction: row; gap: 20px; }
 .sidebar { width: 250px; background: #f4f6f7; padding: 15px; border-radius: 5px; }
 .lesson-main { flex: 1; }
-.lesson-content { background: white; padding: 15px; border: 1px solid #ddd; white-space: pre-wrap; }
+.lesson-content { background: white; padding: 15px; border: 1px solid #ddd; white-space: pre-wrap; 
+/* 🌟 Add these lines to fix the font and text styling */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1.1rem;
+    line-height: 1.6;}
 .hamburger { display: none; }
 
 /* Dictionary Table */

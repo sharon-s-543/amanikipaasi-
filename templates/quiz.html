@@ -20,6 +20,8 @@
 function checkAnswers() {
     let score = 0;
     let blocks = document.querySelectorAll('.quiz-block');
+    
+    // 1. Calculate the score
     blocks.forEach(block => {
         let correct = block.getAttribute('data-correct');
         let selected = block.querySelector('input[type="radio"]:checked');
@@ -27,8 +29,34 @@ function checkAnswers() {
             score++;
         }
     });
+    
+    // 2. Display the result
     document.getElementById('quizResult').innerText = "You scored: " + score + " / " + blocks.length;
+
+    // 3. LOCK ALL INPUTS (Prevents editing)
+    let allInputs = document.querySelectorAll('#quizForm input[type="radio"]');
+    allInputs.forEach(input => {
+        input.disabled = true;
+    });
+
+    // 4. DISABLE THE SUBMIT BUTTON
+    // We give the button an ID or just target it directly to prevent double submissions
+    let submitBtn = document.querySelector('#quizForm button');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Quiz Submitted";
+        submitBtn.style.background = "#7f8c8d"; // Gray out the button visually
+        submitBtn.style.cursor = "not-allowed";
+    };
+    // Display the result with a "Try Again" button that reloads the page
+    document.getElementById('quizResult').innerHTML = 
+        "You scored: " + score + " / " + blocks.length + 
+        "<br><br><button type='button' onclick='window.location.reload();' style='background:#3498db; color:white; border:none; padding:10px 15px; border-radius:4px; cursor:pointer;'>Try Again</button>";
+
 }
 </script>
+
 {% endblock %}
+
+ %}
 

@@ -122,13 +122,18 @@ def admin_logout():
 def admin_dashboard():
     if not session.get('logged_in'): return redirect(url_for('admin'))
     db = get_db()
+    # Read the active tab from the URL parameters (defaults to ManageLessons)
+    active_tab = request.args.get('tab', 'ManageLessons')
+    
     return render_template(
         'admin_dashboard.html',
         lessons=db.execute('SELECT * FROM lessons ORDER BY sort_order ASC').fetchall(),
         words=db.execute('SELECT * FROM dictionary ORDER BY amanikipaasi ASC').fetchall(),
         phrases=db.execute('SELECT * FROM phrases ORDER BY id DESC LIMIT 1').fetchone(),
-        questions=db.execute('SELECT * FROM quiz').fetchall()
+        questions=db.execute('SELECT * FROM quiz').fetchall(),
+        active_tab=active_tab
     )
+
 
 # --- ADMIN CRUD OPERATIONS ---
 
@@ -161,21 +166,21 @@ def edit_lesson(id):
     lesson = db.execute('SELECT * FROM lessons WHERE id = ?', (id,)).fetchone()
     return render_template('edit_lesson.html', lesson=lesson)
 
-
 @app.route('/admin/add_word', methods=['POST'])
 def add_word():
     if not session.get('logged_in'): return redirect(url_for('admin'))
     with get_db() as conn:
         conn.execute('INSERT INTO dictionary (amanikipaasi, english, pos) VALUES (?, ?, ?)',
                      (request.form['amanikipaasi'], request.form['english'], request.form['pos']))
-    return redirect(url_for('admin_dashboard'))
+    # Tells the template to stick to the Dictionary tab
+    return redirect(url_for('admin_dashboard', tab='ManageDict'))
 
 @app.route('/admin/update_phrases', methods=['POST'])
 def update_phrases():
     if not session.get('logged_in'): return redirect(url_for('admin'))
     with get_db() as conn:
         conn.execute('INSERT INTO phrases (content) VALUES (?)', (request.form['content'],))
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('admin_dashboard', tab='ManagePhrases'))
 
 @app.route('/admin/add_question', methods=['POST'])
 def add_question():
@@ -183,7 +188,59 @@ def add_question():
     with get_db() as conn:
         conn.execute('INSERT INTO quiz (question, option_a, option_b, option_c, option_d, correct_answer) VALUES (?, ?, ?, ?, ?, ?)',
                      (request.form['question'], request.form['option_a'], request.form['option_b'], request.form['option_c'], request.form['option_d'], request.form['correct_answer']))
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('admin_dashboard', tab='ManageQuiz'))
+
+# --- NEW DELETE ROUTES ---
+
+@app.route('/admin/delete_word/<int:id>', methods=['POST'])
+def delete_word(id):
+    if not session.get('logged_in'): return redirect(url_for('admin'))
+    with get_db() as conn:
+        conn.execute('DELETE FROM dictionary WHERE id = ?', (id,))
+    return redirect(url_for('admin_dashboard', tab='ManageDict'))
+
+@app.route('/admin/delete_question/<int:id>', methods=['POST'])
+def delete_question(id):
+    if not session.get('logged_in'): return redirect(url_for('admin'))
+    with get_db() as conn:
+        conn.execute('DELETE FROM quiz WHERE id = ?', (id,))
+    return redirect(url_for('admin_dashboard', tab='ManageQuiz'))
+
+# --- EDIT DICTIONARY WORD ROUTE ---
+@app.route('/admin/edit_word/<int:id>', methods=['GET', 'POST'])
+def edit_word(id):
+    if not session.get('logged_in'): return redirect(url_for('admin'))
+    db = get_db()
+    
+    if request.method == 'POST':
+        with get_db() as conn:
+            conn.execute('UPDATE dictionary SET amanikipaasi = ?, english = ?, pos = ? WHERE id = ?',
+                         (request.form['amanikipaasi'], request.form['english'], request.form['pos'], id))
+        return redirect(url_for('admin_dashboard', tab='ManageDict'))
+        
+    word = db.execute('SELECT * FROM dictionary WHERE id = ?', (id,)).fetchone()
+    return render_template('edit_word.html', word=word)
+
+# --- EDIT QUIZ QUESTION ROUTE ---
+@app.route('/admin/edit_question/<int:id>', methods=['GET', 'POST'])
+def edit_question(id):
+    if not session.get('logged_in'): return redirect(url_for('admin'))
+    db = get_db()
+    
+    if request.method == 'POST':
+        with get_db() as conn:
+            conn.execute('''UPDATE quiz SET 
+                            question = ?, option_a = ?, option_b = ?, 
+                            option_c = ?, option_d = ?, correct_answer = ? 
+                            WHERE id = ?''',
+                         (request.form['question'], request.form['option_a'], request.form['option_b'], 
+                          request.form['option_c'], request.form['option_d'], request.form['correct_answer'], id))
+        return redirect(url_for('admin_dashboard', tab='ManageQuiz'))
+        
+    question = db.execute('SELECT * FROM quiz WHERE id = ?', (id,)).fetchone()
+    return render_template('edit_question.html', q=question)
+
+
 
 # Note: You can add delete/edit endpoints similarly using: "DELETE FROM table WHERE id = ?"
 
